@@ -1,0 +1,76 @@
+name: 'Store Metadata Exporter'
+description: 'Extract App Store Connect metadata and write to a directory'
+author: 'AdguardTeam'
+
+branding:
+  icon: 'download-cloud'
+  color: 'blue'
+
+inputs:
+  issuer-id:
+    description: 'App Store Connect Issuer ID'
+    required: true
+  key-id:
+    description: 'App Store Connect Key ID'
+    required: true
+  private-key:
+    description: 'App Store Connect private key content (.p8 file contents)'
+    required: true
+  output-dir:
+    description: 'Output directory for metadata files'
+    required: false
+    default: '.'
+  verbose:
+    description: 'Enable verbose output'
+    required: false
+    default: 'false'
+
+outputs:
+  apps-count:
+    description: 'Number of apps processed'
+    value: ${{ steps.run.outputs.apps-count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download store-metadata-exporter
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          BINARY="store-metadata-exporter-linux"
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          BINARY="store-metadata-exporter-macos"
+        else
+          echo "Unsupported OS: $RUNNER_OS"
+          exit 1
+        fi
+
+        curl -sL -o "${{ github.action_path }}/store-metadata-exporter" \
+          "https://github.com/AdguardTeam/store-metadata-exporter/releases/latest/download/${BINARY}"
+        chmod +x "${{ github.action_path }}/store-metadata-exporter"
+
+    - name: Run store-metadata-exporter
+      id: run
+      shell: bash
+      env:
+        ASC_ISSUER_ID: ${{ inputs.issuer-id }}
+        ASC_KEY_ID: ${{ inputs.key-id }}
+        ASC_PRIVATE_KEY: ${{ inputs.private-key }}
+      run: |
+        VERBOSE_FLAG=""
+        if [[ "${{ inputs.verbose }}" == "true" ]]; then
+          VERBOSE_FLAG="--verbose"
+        fi
+
+        OUTPUT=$("${{ github.action_path }}/store-metadata-exporter" \
+          --output-dir="${{ inputs.output-dir }}" \
+          $VERBOSE_FLAG 2>&1) || {
+          echo "$OUTPUT"
+          exit 1
+        }
+
+        echo "$OUTPUT"
+
+        # Extract apps count from output
+        APPS_COUNT=$(echo "$OUTPUT" | grep -oP 'Found \K\d+(?= apps)' || echo "0")
+        echo "apps-count=${APPS_COUNT}" >> $GITHUB_OUTPUT

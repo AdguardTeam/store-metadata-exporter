@@ -1,0 +1,15 @@
+build.sbt
+build.gradle
+settings.gradle
+gradle/**
+gradlew
+gradlew.bat
+.github/**
+.travis.yml
+.circleci/**
+Jenkinsfile
+.gitignore
+gradle.properties
+.openapi-generator/**
+git_push.sh
+src/main/AndroidManifest.xml

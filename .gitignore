@@ -1,0 +1,17 @@
+# IDE files
+.idea/
+*.iml
+
+# Common libraries
+# Server java / ignore all target and deploy dirs
+**/deploy/
+**/target/
+
+.java-version
+.env
+.editorconfig
+openapi-generator-cli*.jar
+test.properties
+
+# Generated intermediate files
+appstoreconnect.json

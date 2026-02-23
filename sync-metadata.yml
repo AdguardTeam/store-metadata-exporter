@@ -1,0 +1,41 @@
+name: Sync App Store Metadata
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download store-metadata-exporter
+        run: |
+          curl -sL -o store-metadata-exporter \
+            "https://github.com/AdguardTeam/store-metadata-exporter/releases/latest/download/store-metadata-exporter-linux"
+          chmod +x store-metadata-exporter
+
+      - name: Run store-metadata-exporter
+        env:
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          ./store-metadata-exporter --output-dir=. --verbose
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "Update App Store metadata $(date -u +%Y-%m-%d)"
+            git push
+            echo "Changes committed and pushed"
+          else
+            echo "No changes detected"
+          fi

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "com.adguard.stores.metadata.exporter.MetadataExporterApp",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.adguard.stores.metadata.exporter.model.AppMetadata",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.adguard.stores.metadata.exporter.model.LocalizationMetadata",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.adguard.stores.metadata.exporter.model.LocalizationMetadata$AppInfoData",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.adguard.stores.metadata.exporter.model.LocalizationMetadata$VersionData",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  }
+]
