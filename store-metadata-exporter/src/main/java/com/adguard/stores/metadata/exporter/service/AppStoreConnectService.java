@@ -6,14 +6,15 @@ import com.adguard.stores.appstoreconnect.ApiClient;
 import com.adguard.stores.appstoreconnect.ApiException;
 import com.adguard.stores.metadata.exporter.model.AppMetadata;
 import com.adguard.stores.metadata.exporter.model.LocalizationMetadata;
-import io.jsonwebtoken.Jwts;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.nio.charset.StandardCharsets;
 
 public class AppStoreConnectService {
 
@@ -93,10 +94,8 @@ public class AppStoreConnectService {
                         LocalizationMetadata.builder().locale(locale).build());
 
                 existing.setVersion(LocalizationMetadata.VersionData.builder()
-                        .versionString(currentVersion)
                         .description(attrs.getDescription())
                         .keywords(attrs.getKeywords())
-                        .whatsNew(attrs.getWhatsNew())
                         .promotionalText(attrs.getPromotionalText())
                         .marketingUrl(attrs.getMarketingUrl() != null ? attrs.getMarketingUrl().toString() : null)
                         .supportUrl(attrs.getSupportUrl() != null ? attrs.getSupportUrl().toString() : null)
@@ -173,20 +172,77 @@ public class AppStoreConnectService {
         PrivateKey privateKey = parsePrivateKey(formattedKey);
 
         Instant now = Instant.now();
-        Instant expiration = now.plus(20, ChronoUnit.MINUTES);
+        long iat = now.getEpochSecond();
+        long exp = now.plus(20, ChronoUnit.MINUTES).getEpochSecond();
 
-        return Jwts.builder()
-                .header()
-                .keyId(keyId)
-                .type("JWT")
-                .add("alg", "ES256")
-                .and()
-                .issuer(issuerId)
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(expiration))
-                .audience().add("appstoreconnect-v1").and()
-                .signWith(privateKey, Jwts.SIG.ES256)
-                .compact();
+        // Build header
+        String header = "{\"alg\":\"ES256\",\"kid\":\"" + keyId + "\",\"typ\":\"JWT\"}";
+        
+        // Build payload
+        String payload = "{\"iss\":\"" + issuerId + "\",\"iat\":" + iat + ",\"exp\":" + exp + ",\"aud\":\"appstoreconnect-v1\"}";
+        
+        // Base64url encode header and payload
+        Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
+        String encodedHeader = encoder.encodeToString(header.getBytes(StandardCharsets.UTF_8));
+        String encodedPayload = encoder.encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+        
+        // Create signature input
+        String signatureInput = encodedHeader + "." + encodedPayload;
+        
+        // Sign with ES256 (ECDSA with SHA-256)
+        Signature signature = Signature.getInstance("SHA256withECDSA");
+        signature.initSign(privateKey);
+        signature.update(signatureInput.getBytes(StandardCharsets.UTF_8));
+        byte[] derSignature = signature.sign();
+        
+        // Convert DER signature to JWS format (R || S, each 32 bytes)
+        byte[] jwsSignature = derToJws(derSignature);
+        String encodedSignature = encoder.encodeToString(jwsSignature);
+        
+        return signatureInput + "." + encodedSignature;
+    }
+
+    /**
+     * Convert DER-encoded ECDSA signature to JWS format (R || S).
+     * DER format: 0x30 [total-length] 0x02 [r-length] [r] 0x02 [s-length] [s]
+     * JWS format: [r (32 bytes)] [s (32 bytes)]
+     */
+    private byte[] derToJws(byte[] der) {
+        int offset = 2; // Skip 0x30 and total length
+        
+        // Parse R
+        if (der[offset] != 0x02) throw new IllegalArgumentException("Invalid DER signature");
+        offset++;
+        int rLength = der[offset++] & 0xFF;
+        byte[] r = new byte[rLength];
+        System.arraycopy(der, offset, r, 0, rLength);
+        offset += rLength;
+        
+        // Parse S
+        if (der[offset] != 0x02) throw new IllegalArgumentException("Invalid DER signature");
+        offset++;
+        int sLength = der[offset++] & 0xFF;
+        byte[] s = new byte[sLength];
+        System.arraycopy(der, offset, s, 0, sLength);
+        
+        // Create JWS signature (each component padded/trimmed to 32 bytes for P-256)
+        byte[] jwsSignature = new byte[64];
+        copyWithPadding(r, jwsSignature, 0, 32);
+        copyWithPadding(s, jwsSignature, 32, 32);
+        
+        return jwsSignature;
+    }
+
+    private void copyWithPadding(byte[] src, byte[] dest, int destOffset, int length) {
+        if (src.length == length) {
+            System.arraycopy(src, 0, dest, destOffset, length);
+        } else if (src.length < length) {
+            // Pad with leading zeros
+            System.arraycopy(src, 0, dest, destOffset + (length - src.length), src.length);
+        } else {
+            // Trim leading zeros (src is longer, typically has leading 0x00)
+            System.arraycopy(src, src.length - length, dest, destOffset, length);
+        }
     }
 
     private String formatPrivateKey(String key) {

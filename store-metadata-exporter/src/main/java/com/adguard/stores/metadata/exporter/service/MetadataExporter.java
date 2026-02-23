@@ -63,10 +63,8 @@ public class MetadataExporter {
 
             if (localization.getVersion() != null) {
                 Map<String, Object> versionJson = new LinkedHashMap<>();
-                versionJson.put("versionString", localization.getVersion().getVersionString());
                 versionJson.put("description", localization.getVersion().getDescription());
                 versionJson.put("keywords", localization.getVersion().getKeywords());
-                versionJson.put("whatsNew", localization.getVersion().getWhatsNew());
                 versionJson.put("promotionalText", localization.getVersion().getPromotionalText());
                 versionJson.put("marketingUrl", localization.getVersion().getMarketingUrl());
                 versionJson.put("supportUrl", localization.getVersion().getSupportUrl());

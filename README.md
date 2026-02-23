@@ -8,7 +8,6 @@ Designed for CI/CD pipelines to track changes in app metadata over time.
 - Extracts metadata for all apps in your App Store Connect account
 - Supports all available locales
 - Outputs structured JSON files
-- Native binary available (no Java runtime required)
 - Environment variable support for CI/CD integration
 - Available as a GitHub Action
 
@@ -53,21 +52,7 @@ Set the required secrets (`ASC_ISSUER_ID`, `ASC_KEY_ID`, `ASC_PRIVATE_KEY`) and 
 
 ## Installation
 
-### Pre-built binary (no Java required)
-
-```bash
-# Linux
-curl -sL -o store-metadata-exporter \
-  "https://github.com/AdguardTeam/store-metadata-exporter/releases/latest/download/store-metadata-exporter-linux"
-chmod +x store-metadata-exporter
-
-# macOS
-curl -sL -o store-metadata-exporter \
-  "https://github.com/AdguardTeam/store-metadata-exporter/releases/latest/download/store-metadata-exporter-macos"
-chmod +x store-metadata-exporter
-```
-
-### Fat JAR (requires Java 21+)
+### Download JAR (requires Java 21+)
 
 ```bash
 curl -sL -o store-metadata-exporter.jar \
@@ -77,13 +62,8 @@ curl -sL -o store-metadata-exporter.jar \
 ### Build from source
 
 ```bash
-# Fat JAR
 mvn package -pl store-metadata-exporter -am -DskipTests
 # Output: store-metadata-exporter/target/store-metadata-exporter.jar
-
-# Native image (requires GraalVM 21+)
-mvn package -pl store-metadata-exporter -am -DskipTests -Pnative
-# Output: store-metadata-exporter/target/store-metadata-exporter
 ```
 
 ## Usage
@@ -91,7 +71,7 @@ mvn package -pl store-metadata-exporter -am -DskipTests -Pnative
 ### Command line
 
 ```bash
-./store-metadata-exporter \
+java -jar store-metadata-exporter.jar \
   --issuer-id <ISSUER_ID> \
   --key-id <KEY_ID> \
   --private-key-file /path/to/AuthKey.p8 \
@@ -105,7 +85,7 @@ export ASC_ISSUER_ID="your-issuer-id"
 export ASC_KEY_ID="your-key-id"
 export ASC_PRIVATE_KEY="base64-encoded-key-or-pem-content"
 
-./store-metadata-exporter --output-dir ./output
+java -jar store-metadata-exporter.jar --output-dir ./output
 ```
 
 ### CLI options
@@ -174,10 +154,8 @@ output/
     "privacyChoicesUrl": null
   },
   "version": {
-    "versionString": "1.2.3",
     "description": "App description...",
     "keywords": "keyword1, keyword2, keyword3",
-    "whatsNew": "Bug fixes and improvements",
     "promotionalText": "New features!",
     "marketingUrl": "https://example.com",
     "supportUrl": "https://example.com/support"
@@ -196,7 +174,6 @@ output/
 ### Version Info (latest live version, per locale)
 - **description** — Full app description
 - **keywords** — Search keywords
-- **whatsNew** — Release notes
 - **promotionalText** — Promotional text
 - **marketingUrl** — Marketing URL
 - **supportUrl** — Support URL

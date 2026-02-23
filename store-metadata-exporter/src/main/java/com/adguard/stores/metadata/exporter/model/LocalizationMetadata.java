@@ -22,10 +22,8 @@ public class LocalizationMetadata {
     @Data
     @Builder
     public static class VersionData {
-        private String versionString;
         private String description;
         private String keywords;
-        private String whatsNew;
         private String promotionalText;
         private String marketingUrl;
         private String supportUrl;

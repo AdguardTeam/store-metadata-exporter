@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-jar:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,76 +25,23 @@ jobs:
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
-          name: store-metadata-exporter-jar
+          name: store-metadata-exporter
           path: store-metadata-exporter/target/store-metadata-exporter.jar
 
-  build-native-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '21'
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Native Image
-        run: mvn package -pl store-metadata-exporter -am -DskipTests -Pnative -q
-
-      - name: Upload Linux binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: store-metadata-exporter-linux
-          path: store-metadata-exporter/target/store-metadata-exporter
-
-  build-native-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '21'
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Native Image
-        run: mvn package -pl store-metadata-exporter -am -DskipTests -Pnative -q
-
-      - name: Upload macOS binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: store-metadata-exporter-macos
-          path: store-metadata-exporter/target/store-metadata-exporter
-
   release:
-    needs: [build-jar, build-native-linux, build-native-macos]
+    needs: [build]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
-
-      - name: Prepare release assets
-        run: |
-          mkdir -p release
-          cp artifacts/store-metadata-exporter-jar/store-metadata-exporter.jar release/store-metadata-exporter.jar
-          cp artifacts/store-metadata-exporter-linux/store-metadata-exporter release/store-metadata-exporter-linux
-          cp artifacts/store-metadata-exporter-macos/store-metadata-exporter release/store-metadata-exporter-macos
-          chmod +x release/store-metadata-exporter-linux release/store-metadata-exporter-macos
+          name: store-metadata-exporter
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            release/store-metadata-exporter.jar
-            release/store-metadata-exporter-linux
-            release/store-metadata-exporter-macos
+          files: store-metadata-exporter.jar
           generate_release_notes: true

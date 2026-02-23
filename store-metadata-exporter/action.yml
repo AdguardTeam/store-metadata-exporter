@@ -36,18 +36,8 @@ runs:
     - name: Download store-metadata-exporter
       shell: bash
       run: |
-        if [[ "$RUNNER_OS" == "Linux" ]]; then
-          BINARY="store-metadata-exporter-linux"
-        elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          BINARY="store-metadata-exporter-macos"
-        else
-          echo "Unsupported OS: $RUNNER_OS"
-          exit 1
-        fi
-
-        curl -sL -o "${{ github.action_path }}/store-metadata-exporter" \
-          "https://github.com/AdguardTeam/store-metadata-exporter/releases/latest/download/${BINARY}"
-        chmod +x "${{ github.action_path }}/store-metadata-exporter"
+        curl -sL -o "${{ github.action_path }}/store-metadata-exporter.jar" \
+          "https://github.com/AdguardTeam/store-metadata-exporter/releases/latest/download/store-metadata-exporter.jar"
 
     - name: Run store-metadata-exporter
       id: run
@@ -62,7 +52,7 @@ runs:
           VERBOSE_FLAG="--verbose"
         fi
 
-        OUTPUT=$("${{ github.action_path }}/store-metadata-exporter" \
+        OUTPUT=$(java -jar "${{ github.action_path }}/store-metadata-exporter.jar" \
           --output-dir="${{ inputs.output-dir }}" \
           $VERBOSE_FLAG 2>&1) || {
           echo "$OUTPUT"
