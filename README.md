@@ -220,7 +220,6 @@ output/
 
 ```
 store-metadata-exporter/
-├── base-client-api/           # Base HTTP client (generated from OpenAPI)
 ├── appstoreconnect-api/       # App Store Connect API client (generated)
 ├── store-metadata-exporter/   # CLI tool and GitHub Action
 │   ├── action.yml             # GitHub Action definition

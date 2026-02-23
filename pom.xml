@@ -76,11 +76,6 @@
         <dependencies>
             <dependency>
                 <groupId>com.adguard.stores</groupId>
-                <artifactId>base-client-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.adguard.stores</groupId>
                 <artifactId>appstoreconnect-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
