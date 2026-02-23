@@ -7,15 +7,10 @@ import com.adguard.stores.appstoreconnect.ApiException;
 import com.adguard.stores.metadata.exporter.model.AppMetadata;
 import com.adguard.stores.metadata.exporter.model.LocalizationMetadata;
 import io.jsonwebtoken.Jwts;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-
-import java.io.StringReader;
+import java.security.KeyFactory;
 import java.security.PrivateKey;
-import java.security.Security;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -30,8 +25,6 @@ public class AppStoreConnectService {
     private final String privateKeyContent;
 
     public AppStoreConnectService(String issuerId, String keyId, String privateKeyContent) throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
-        
         this.issuerId = issuerId;
         this.keyId = keyId;
         this.privateKeyContent = privateKeyContent;
@@ -221,19 +214,17 @@ public class AppStoreConnectService {
     }
 
     private PrivateKey parsePrivateKey(String pemContent) throws Exception {
-        try (PEMParser pemParser = new PEMParser(new StringReader(pemContent))) {
-            Object object = pemParser.readObject();
-            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+        // Extract base64 content from PEM
+        String base64Key = pemContent
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replace("-----BEGIN EC PRIVATE KEY-----", "")
+                .replace("-----END EC PRIVATE KEY-----", "")
+                .replaceAll("\\s+", "");
 
-            if (object instanceof PrivateKeyInfo) {
-                return converter.getPrivateKey((PrivateKeyInfo) object);
-            } else if (object instanceof PEMKeyPair) {
-                return converter.getPrivateKey(((PEMKeyPair) object).getPrivateKeyInfo());
-            } else if (object == null) {
-                throw new IllegalArgumentException("Could not parse private key - PEMParser returned null");
-            } else {
-                throw new IllegalArgumentException("Unexpected key type: " + object.getClass().getName());
-            }
-        }
+        byte[] keyBytes = Base64.getDecoder().decode(base64Key);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("EC");
+        return keyFactory.generatePrivate(keySpec);
     }
 }
