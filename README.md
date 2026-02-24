@@ -138,7 +138,7 @@ output/
   "appId": "1234567890",
   "bundleId": "com.example.myapp",
   "currentVersion": "1.2.3",
-  "lastUpdated": "2026-02-23T18:00:00Z"
+  "versionCreatedAt": "2026-01-15T10:30:00Z"
 }
 ```
 

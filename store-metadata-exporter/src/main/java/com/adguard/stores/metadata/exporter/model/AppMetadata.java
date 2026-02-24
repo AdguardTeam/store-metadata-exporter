@@ -12,6 +12,6 @@ public class AppMetadata {
     private String appId;
     private String bundleId;
     private String currentVersion;
-    private Instant lastUpdated;
+    private Instant versionCreatedAt;
     private List<LocalizationMetadata> localizations;
 }

@@ -42,7 +42,9 @@ public class MetadataExporter {
         metadataJson.put("appId", appMetadata.getAppId());
         metadataJson.put("bundleId", appMetadata.getBundleId());
         metadataJson.put("currentVersion", appMetadata.getCurrentVersion());
-        metadataJson.put("lastUpdated", appMetadata.getLastUpdated().toString());
+        if (appMetadata.getVersionCreatedAt() != null) {
+            metadataJson.put("versionCreatedAt", appMetadata.getVersionCreatedAt().toString());
+        }
 
         Path metadataFile = appDir.resolve("metadata.json");
         writeJson(metadataFile, metadataJson);
