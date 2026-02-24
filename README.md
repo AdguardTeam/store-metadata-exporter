@@ -197,9 +197,9 @@ output/
 
 ```
 store-metadata-exporter/
+├── action.yml                 # GitHub Action definition
 ├── appstoreconnect-api/       # App Store Connect API client (generated)
-├── store-metadata-exporter/   # CLI tool and GitHub Action
-│   ├── action.yml             # GitHub Action definition
+├── store-metadata-exporter/   # CLI tool
 │   └── src/
 ├── sync-metadata.yml          # Ready-to-use workflow file
 └── pom.xml
