@@ -52,7 +52,7 @@ Set the required secrets (`ASC_ISSUER_ID`, `ASC_KEY_ID`, `ASC_PRIVATE_KEY`) and 
 
 ## Installation
 
-### Download JAR (requires Java 21+)
+### Download JAR (requires Java 17+)
 
 ```bash
 curl -sL -o store-metadata-exporter.jar \

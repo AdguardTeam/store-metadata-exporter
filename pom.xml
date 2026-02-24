@@ -26,7 +26,7 @@
 
     <properties>
         <!-- Common -->
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
