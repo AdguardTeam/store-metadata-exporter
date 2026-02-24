@@ -1,5 +1,5 @@
 name: 'Store Metadata Exporter'
-description: 'Extract App Store Connect metadata and write to a directory'
+description: 'Extract App Store Connect and Google Play metadata and write to a directory'
 author: 'AdguardTeam'
 
 branding:
@@ -7,15 +7,29 @@ branding:
   color: 'blue'
 
 inputs:
-  issuer-id:
+  # App Store Connect inputs (optional if using Google Play only)
+  asc-issuer-id:
     description: 'App Store Connect Issuer ID'
-    required: true
-  key-id:
+    required: false
+  asc-key-id:
     description: 'App Store Connect Key ID'
-    required: true
-  private-key:
+    required: false
+  asc-private-key:
     description: 'App Store Connect private key content (.p8 file contents)'
-    required: true
+    required: false
+
+  # Google Play inputs (optional if using App Store Connect only)
+  gp-service-account:
+    description: 'Google Play service account JSON content'
+    required: false
+  gp-package-names:
+    description: 'Google Play package names (comma-separated)'
+    required: false
+  gp-package-names-file:
+    description: 'Path to file with Google Play package names (one per line). Default: gp-packages.txt'
+    required: false
+
+  # Common inputs
   output-dir:
     description: 'Output directory for metadata files'
     required: false
@@ -43,9 +57,12 @@ runs:
       id: run
       shell: bash
       env:
-        ASC_ISSUER_ID: ${{ inputs.issuer-id }}
-        ASC_KEY_ID: ${{ inputs.key-id }}
-        ASC_PRIVATE_KEY: ${{ inputs.private-key }}
+        ASC_ISSUER_ID: ${{ inputs.asc-issuer-id }}
+        ASC_KEY_ID: ${{ inputs.asc-key-id }}
+        ASC_PRIVATE_KEY: ${{ inputs.asc-private-key }}
+        GP_SERVICE_ACCOUNT: ${{ inputs.gp-service-account }}
+        GP_PACKAGE_NAMES: ${{ inputs.gp-package-names }}
+        GP_PACKAGE_NAMES_FILE: ${{ inputs.gp-package-names-file }}
       run: |
         VERBOSE_FLAG=""
         if [[ "${{ inputs.verbose }}" == "true" ]]; then
@@ -62,5 +79,5 @@ runs:
         echo "$OUTPUT"
 
         # Extract apps count from output
-        APPS_COUNT=$(echo "$OUTPUT" | grep -oP 'Found \K\d+(?= apps)' || echo "0")
+        APPS_COUNT=$(echo "$OUTPUT" | grep -oP 'Processed \K\d+(?= apps)' || echo "0")
         echo "apps-count=${APPS_COUNT}" >> $GITHUB_OUTPUT

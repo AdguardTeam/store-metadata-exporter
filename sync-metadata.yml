@@ -1,4 +1,4 @@
-name: Sync App Store Metadata
+name: Sync Store Metadata
 
 on:
   schedule:
@@ -19,9 +19,13 @@ jobs:
 
       - name: Run store-metadata-exporter
         env:
+          # App Store Connect (optional)
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          # Google Play (optional)
+          GP_SERVICE_ACCOUNT: ${{ secrets.GP_SERVICE_ACCOUNT }}
+          GP_PACKAGE_NAMES: ${{ secrets.GP_PACKAGE_NAMES }}
         run: |
           java -jar store-metadata-exporter.jar --output-dir=. --verbose
 
@@ -32,7 +36,7 @@ jobs:
           
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
-            git commit -m "Update App Store metadata $(date -u +%Y-%m-%d)"
+            git commit -m "Update store metadata $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
             git push
             echo "Changes committed and pushed"
           else

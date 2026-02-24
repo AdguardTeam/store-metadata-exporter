@@ -1,22 +1,23 @@
 # Store Metadata Exporter
 
-CLI tool and GitHub Action for extracting App Store Connect metadata and writing it to a directory.
+CLI tool and GitHub Action for extracting App Store Connect and Google Play metadata and writing it to a directory.
 Designed for CI/CD pipelines to track changes in app metadata over time.
 
 ## Features
 
-- Extracts metadata for all apps in your App Store Connect account
+- Extracts metadata from **App Store Connect** and **Google Play**
 - Supports all available locales
 - Outputs structured JSON files
 - Environment variable support for CI/CD integration
 - Available as a GitHub Action
+- Supports using one or both stores (credentials are optional per store)
 
 ## Quick Start
 
 ### GitHub Action (recommended)
 
 ```yaml
-name: Sync App Store Metadata
+name: Sync Store Metadata
 
 on:
   schedule:
@@ -29,11 +30,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: AdguardTeam/store-metadata-exporter/store-metadata-exporter@v1
+      - uses: AdguardTeam/store-metadata-exporter@v1
         with:
-          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
-          key-id: ${{ secrets.ASC_KEY_ID }}
-          private-key: ${{ secrets.ASC_PRIVATE_KEY }}
+          # App Store Connect (optional)
+          asc-issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          asc-key-id: ${{ secrets.ASC_KEY_ID }}
+          asc-private-key: ${{ secrets.ASC_PRIVATE_KEY }}
+          # Google Play (optional)
+          gp-service-account: ${{ secrets.GP_SERVICE_ACCOUNT }}
+          gp-package-names: 'com.example.app1,com.example.app2'
           output-dir: .
 
       - name: Commit changes
@@ -48,7 +53,7 @@ jobs:
 ### Standalone workflow file
 
 Copy [sync-metadata.yml](sync-metadata.yml) to `.github/workflows/` in your repository.  
-Set the required secrets (`ASC_ISSUER_ID`, `ASC_KEY_ID`, `ASC_PRIVATE_KEY`) and it will work out of the box.
+Set the required secrets and it will work out of the box.
 
 ## Installation
 
@@ -71,31 +76,70 @@ mvn package -pl store-metadata-exporter -am -DskipTests
 ### Command line
 
 ```bash
+# App Store Connect only
 java -jar store-metadata-exporter.jar \
-  --issuer-id <ISSUER_ID> \
-  --key-id <KEY_ID> \
-  --private-key-file /path/to/AuthKey.p8 \
+  --asc-issuer-id <ISSUER_ID> \
+  --asc-key-id <KEY_ID> \
+  --asc-private-key-file /path/to/AuthKey.p8 \
+  --output-dir ./output
+
+# Google Play only
+java -jar store-metadata-exporter.jar \
+  --gp-service-account-file /path/to/service-account.json \
+  --gp-package-names "com.example.app1,com.example.app2" \
+  --output-dir ./output
+
+# Both stores
+java -jar store-metadata-exporter.jar \
+  --asc-issuer-id <ISSUER_ID> \
+  --asc-key-id <KEY_ID> \
+  --asc-private-key-file /path/to/AuthKey.p8 \
+  --gp-service-account-file /path/to/service-account.json \
+  --gp-package-names "com.example.app1,com.example.app2" \
   --output-dir ./output
 ```
 
 ### Environment variables
 
 ```bash
+# App Store Connect
 export ASC_ISSUER_ID="your-issuer-id"
 export ASC_KEY_ID="your-key-id"
 export ASC_PRIVATE_KEY="base64-encoded-key-or-pem-content"
+
+# Google Play
+export GP_SERVICE_ACCOUNT='{"type":"service_account",...}'
+export GP_PACKAGE_NAMES="com.example.app1,com.example.app2"
 
 java -jar store-metadata-exporter.jar --output-dir ./output
 ```
 
 ### CLI options
 
+#### App Store Connect
+
 | Option | Environment Variable | Description |
 |--------|---------------------|-------------|
-| `--issuer-id` | `ASC_ISSUER_ID` | App Store Connect Issuer ID |
-| `--key-id` | `ASC_KEY_ID` | App Store Connect Key ID |
-| `--private-key-file` | - | Path to .p8 private key file |
-| `--private-key` | `ASC_PRIVATE_KEY` | Private key content (Base64 or PEM) |
+| `--asc-issuer-id` | `ASC_ISSUER_ID` | App Store Connect Issuer ID |
+| `--asc-key-id` | `ASC_KEY_ID` | App Store Connect Key ID |
+| `--asc-private-key-file` | - | Path to .p8 private key file |
+| `--asc-private-key` | `ASC_PRIVATE_KEY` | Private key content (Base64 or PEM) |
+
+#### Google Play
+
+| Option | Environment Variable | Description |
+|--------|---------------------|-------------|
+| `--gp-service-account-file` | - | Path to service account JSON file |
+| `--gp-service-account` | `GP_SERVICE_ACCOUNT` | Service account JSON content |
+| `--gp-package-names` | `GP_PACKAGE_NAMES` | Package names (comma-separated) |
+| `--gp-package-names-file` | `GP_PACKAGE_NAMES_FILE` | Path to file with package names (one per line) |
+
+> **Note:** If no package names are provided via CLI/env, the tool will look for `gp-packages.txt` in the current directory.
+
+#### Common
+
+| Option | Environment Variable | Description |
+|--------|---------------------|-------------|
 | `--output-dir`, `-o` | `OUTPUT_DIR` | Output directory (default: current dir) |
 | `--dry-run` | - | Show what would be done without writing |
 | `--verbose`, `-v` | - | Verbose output |
@@ -104,11 +148,26 @@ java -jar store-metadata-exporter.jar --output-dir ./output
 
 ### Inputs
 
+#### App Store Connect (optional if using Google Play only)
+
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `issuer-id` | Yes | - | App Store Connect Issuer ID |
-| `key-id` | Yes | - | App Store Connect Key ID |
-| `private-key` | Yes | - | Private key content (.p8 file) |
+| `asc-issuer-id` | No | - | App Store Connect Issuer ID |
+| `asc-key-id` | No | - | App Store Connect Key ID |
+| `asc-private-key` | No | - | Private key content (.p8 file) |
+
+#### Google Play (optional if using App Store Connect only)
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `gp-service-account` | No | - | Service account JSON content |
+| `gp-package-names` | No | - | Package names (comma-separated) |
+| `gp-package-names-file` | No | `gp-packages.txt` | Path to file with package names (one per line) |
+
+#### Common
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
 | `output-dir` | No | `.` | Output directory |
 | `verbose` | No | `false` | Enable verbose output |
 
@@ -122,7 +181,14 @@ java -jar store-metadata-exporter.jar --output-dir ./output
 
 ```
 output/
-└── apps/
+├── appstore/
+│   └── com.example.myapp/
+│       ├── metadata.json
+│       └── localizations/
+│           ├── en-US.json
+│           ├── de-DE.json
+│           └── ...
+└── googleplay/
     └── com.example.myapp/
         ├── metadata.json
         └── localizations/
@@ -192,6 +258,40 @@ output/
 | `ASC_ISSUER_ID` | Issuer ID from App Store Connect |
 | `ASC_KEY_ID` | Key ID of your API key |
 | `ASC_PRIVATE_KEY` | Contents of .p8 file (including BEGIN/END lines) |
+
+## Google Play setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create or select a project linked to your Google Play Console
+3. Enable the **Google Play Android Developer API**
+4. Go to **IAM & Admin > Service Accounts** and create a new service account
+5. Download the JSON key file
+6. In [Google Play Console - Users and Permissions](https://play.google.com/console/users-and-permissions), invite the service account email with **View app information** permission
+
+### Required secrets for GitHub Actions
+
+| Secret | Description |
+|--------|-------------|
+| `GP_SERVICE_ACCOUNT` | Contents of service account JSON file |
+| `GP_PACKAGE_NAMES` | Comma-separated list of package names (e.g., `com.example.app1,com.example.app2`) |
+
+> **Note:** Unlike App Store Connect, Google Play API doesn't provide a "list all apps" endpoint. You must explicitly specify the package names you want to export.
+
+### Using gp-packages.txt file
+
+As an alternative to `GP_PACKAGE_NAMES`, you can create a `gp-packages.txt` file in your repository root:
+
+```
+# Google Play packages to export
+com.example.app1
+com.example.app2
+com.example.app3
+```
+
+The file supports:
+- One package name per line
+- Comments starting with `#`
+- Empty lines (ignored)
 
 ## Project structure
 
