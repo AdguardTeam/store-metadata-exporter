@@ -81,6 +81,7 @@ public class AppStoreConnectService {
 
         // Fetch latest live AppStoreVersion
         Instant versionCreatedDate = null;
+        Instant versionReleasedDate = null;
         var liveVersions = fetchLiveAppStoreVersions(appId);
         if (!liveVersions.isEmpty()) {
             var liveVersion = liveVersions.get(0);
@@ -88,6 +89,10 @@ public class AppStoreConnectService {
             var createdDate = liveVersion.getAttributes().getCreatedDate();
             if (createdDate != null) {
                 versionCreatedDate = createdDate.toInstant();
+            }
+            var earliestReleaseDate = liveVersion.getAttributes().getEarliestReleaseDate();
+            if (earliestReleaseDate != null) {
+                versionReleasedDate = earliestReleaseDate.toInstant();
             }
 
             var versionLocalizations = fetchAppStoreVersionLocalizations(liveVersion.getId());
@@ -115,6 +120,7 @@ public class AppStoreConnectService {
                 .bundleId(bundleId)
                 .currentVersion(currentVersion)
                 .versionCreatedAt(versionCreatedDate)
+                .versionReleasedAt(versionReleasedDate)
                 .localizations(new ArrayList<>(localizationMap.values()))
                 .build();
     }

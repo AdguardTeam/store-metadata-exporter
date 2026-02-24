@@ -204,7 +204,8 @@ output/
   "appId": "1234567890",
   "bundleId": "com.example.myapp",
   "currentVersion": "1.2.3",
-  "versionCreatedAt": "2026-01-15T10:30:00Z"
+  "versionCreatedAt": "2026-01-15T10:30:00Z",
+  "versionReleasedAt": "2026-01-20T08:00:00Z"
 }
 ```
 
@@ -230,6 +231,13 @@ output/
 ```
 
 ## Tracked metadata
+
+### App metadata
+- **appId** — App Store ID or Google Play package name
+- **bundleId** — Bundle identifier
+- **currentVersion** — Current live version string
+- **versionCreatedAt** — When the version was created (App Store Connect only)
+- **versionReleasedAt** — Earliest release date / when the version was released (App Store Connect only)
 
 ### App Info (per locale)
 - **name** — App name
@@ -292,6 +300,8 @@ The file supports:
 - One package name per line
 - Comments starting with `#`
 - Empty lines (ignored)
+
+Path to the file of the above format may be specified via `GP_PACKAGE_NAMES_FILE` environment variable.
 
 ## Project structure
 
